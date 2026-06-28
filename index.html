@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Korea Snake 한국 스네이크</title>
+<style>
+  :root{
+    --bg:#0f1226; --panel:#171a33; --panel2:#1f2347;
+    --ink:#eef0ff; --muted:#9aa0c7; --accent:#ff5a5f; --accent2:#2dd4bf;
+    --gold:#ffd24a; --grid:#222850; --grid2:#262d57;
+    --water:#2b6cff; --water2:#1d4fd0; --bridge:#8a6a4a; --bridge2:#6f5238;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    background:radial-gradient(1200px 800px at 50% -10%, #1b2046 0%, var(--bg) 60%);
+    color:var(--ink); font-family:"Segoe UI",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    display:flex; align-items:center; justify-content:center; min-height:100%;
+    -webkit-tap-highlight-color:transparent; overflow-x:hidden;
+  }
+  #app{width:100%; max-width:680px; padding:14px}
+  .title{ text-align:center; margin:6px 0 14px}
+  .title h1{ margin:0; font-size:clamp(26px,7vw,40px); letter-spacing:.5px}
+  .title h1 .kr{ color:var(--accent2)}
+  .title p{ margin:4px 0 0; color:var(--muted); font-size:14px}
+
+  /* Screens */
+  .screen{display:none; animation:fade .25s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+
+  /* Map select */
+  .grid-cards{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+  @media(max-width:520px){.grid-cards{grid-template-columns:repeat(2,1fr)}}
+  .card{
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid #2b3160; border-radius:16px; padding:14px 12px; cursor:pointer;
+    text-align:center; transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+    position:relative; overflow:hidden;
+  }
+  .card:hover{transform:translateY(-3px); border-color:var(--accent2); box-shadow:0 10px 24px rgba(0,0,0,.35)}
+  .card .emoji{font-size:34px; line-height:1}
+  .card .cname{font-weight:700; margin-top:8px; font-size:16px}
+  .card .ckr{color:var(--muted); font-size:12px}
+  .card .feat{margin-top:8px; font-size:11px; color:var(--accent2); min-height:28px}
+  .card .best{margin-top:6px; font-size:11px; color:var(--gold)}
+
+  .hint{ text-align:center; color:var(--muted); font-size:12.5px; margin-top:16px; line-height:1.6}
+  .hint kbd{background:#2a2f5c; border-radius:5px; padding:1px 6px; border:1px solid #3a4180; font-size:11px}
+
+  /* Game screen */
+  .hud{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:10px}
+  .hud .pill{background:var(--panel); border:1px solid #2b3160; border-radius:999px; padding:7px 14px; font-size:14px; font-weight:600}
+  .hud .pill b{color:var(--gold)}
+  .hud .pill .s{color:var(--accent2)}
+  .btn{
+    background:var(--panel2); color:var(--ink); border:1px solid #353b73; border-radius:10px;
+    padding:8px 14px; font-size:14px; cursor:pointer; font-weight:600; transition:background .12s, transform .08s
+  }
+  .btn:hover{background:#2a3066}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:var(--accent); border-color:#ff7a7e}
+  .btn.primary:hover{background:#ff6b70}
+
+  .stage-wrap{position:relative; width:100%; aspect-ratio:1/1; max-width:560px; margin:0 auto}
+  canvas{
+    width:100%; height:100%; display:block; border-radius:14px;
+    background:#10142e; border:1px solid #2b3160; touch-action:none;
+  }
+  .overlay{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column;
+    background:rgba(9,11,28,.82); border-radius:14px; text-align:center; padding:20px; backdrop-filter:blur(3px)
+  }
+  .overlay.show{display:flex; animation:fade .2s ease}
+  .overlay h2{margin:0 0 6px; font-size:28px}
+  .overlay p{margin:4px 0; color:var(--muted)}
+  .overlay .big{font-size:40px; margin:6px 0}
+  .overlay .row{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; justify-content:center}
+
+  .legend{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:12px; color:var(--muted); font-size:12px}
+  .legend span{display:inline-flex; align-items:center; gap:6px}
+  .sw{width:13px; height:13px; border-radius:4px; display:inline-block}
+
+  .footer{text-align:center; margin-top:14px; color:var(--muted); font-size:11px}
+  .mute-btn{position:absolute; top:10px; right:10px; z-index:5}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="title">
+    <h1>🐍 Korea Snake <span class="kr">한국 스네이크</span></h1>
+    <p>Eat Korean food. Mind the rivers. Cross only on bridges.</p>
+  </div>
+
+  <!-- ===== MAP SELECT ===== -->
+  <section id="menu" class="screen active">
+    <div class="grid-cards" id="cards"></div>
+    <div class="hint">
+      Move with <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ·
+      <kbd>Space</kbd> to pause · On phone, <b>swipe</b> to steer.<br/>
+      🌊 Water is deadly — only the wooden <b>bridges</b> are safe to cross.
+    </div>
+  </section>
+
+  <!-- ===== GAME ===== -->
+  <section id="game" class="screen">
+    <div class="hud">
+      <button class="btn" id="backBtn">← Maps</button>
+      <div class="pill">Score <b id="score">0</b></div>
+      <div class="pill">Best <span class="s" id="best">0</span></div>
+      <button class="btn" id="pauseBtn">Pause</button>
+    </div>
+    <div class="stage-wrap">
+      <canvas id="cv" width="560" height="560"></canvas>
+      <button class="btn mute-btn" id="muteBtn" title="Sound on/off">🔊</button>
+
+      <div class="overlay" id="startOverlay">
+        <div class="big" id="ovEmoji">🏙️</div>
+        <h2 id="ovCity">Seoul</h2>
+        <p id="ovFeat">Han River · 3 bridges</p>
+        <div class="row">
+          <button class="btn primary" id="goBtn">Start ▶</button>
+          <button class="btn" id="changeBtn">Change map</button>
+        </div>
+      </div>
+
+      <div class="overlay" id="pauseOverlay">
+        <h2>⏸ Paused</h2>
+        <p>Press Space or tap Resume</p>
+        <div class="row"><button class="btn primary" id="resumeBtn">Resume ▶</button></div>
+      </div>
+
+      <div class="overlay" id="overOverlay">
+        <h2 id="overTitle">Game Over</h2>
+        <div class="big">💥</div>
+        <p>Score <b id="finalScore" style="color:var(--gold)">0</b></p>
+        <p id="overMsg"></p>
+        <div class="row">
+          <button class="btn primary" id="againBtn">Play again ↻</button>
+          <button class="btn" id="menuBtn">Maps</button>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--water)"></i> Water (death)</span>
+      <span><i class="sw" style="background:var(--bridge)"></i> Bridge (safe)</span>
+      <span>🍙 food +1 · 🍉 bonus</span>
+    </div>
+  </section>
+
+  <div class="footer">Made for fun · Plain HTML/JS · Host free on GitHub Pages</div>
+</div>
+
+<script>
+/* ============================================================
+   KOREA SNAKE — single-file game
+   Layers: core snake · 6 city maps · river+bridge mechanic · polish
+   ============================================================ */
+(function(){
+  "use strict";
+
+  const GRID = 24;                 // cells per side
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  let CELL = cv.width / GRID;      // pixel size of a cell
+
+  /* ---------- Map definitions ----------
+     water: rectangles (inclusive cell coords) that kill on entry
+     bridges: rectangles that overlay water and are SAFE to cross
+     spawn: safe starting cell + initial direction                */
+  function rect(x0,y0,x1,y1){return {x0,y0,x1,y1};}
+
+  const MAPS = [
+    {
+      id:'seoul', name:'Seoul', kr:'서울', emoji:'🏙️',
+      feat:'Han River · 3 bridges', landmark:'🌉',
+      water:[ rect(0,11,23,12) ],
+      bridges:[ rect(3,11,4,12), rect(11,11,12,12), rect(19,11,20,12) ],
+      spawn:{x:4,y:4,dir:{x:1,y:0}}
+    },
+    {
+      id:'busan', name:'Busan', kr:'부산', emoji:'🌊',
+      feat:'Gwangan Bridge · coast', landmark:'🌁',
+      water:[ rect(11,0,12,23) ],
+      bridges:[ rect(11,5,12,6), rect(11,17,12,18) ],
+      spawn:{x:3,y:3,dir:{x:0,y:1}}
+    },
+    {
+      id:'incheon', name:'Incheon', kr:'인천', emoji:'⚓',
+      feat:'Incheon Bridge · sea', landmark:'🛳️',
+      water:[ rect(0,20,23,21) ],
+      bridges:[ rect(8,20,9,21), rect(15,20,16,21) ],
+      spawn:{x:4,y:3,dir:{x:1,y:0}}
+    },
+    {
+      id:'daegu', name:'Daegu', kr:'대구', emoji:'🍎',
+      feat:'Nakdong River bend', landmark:'🏞️',
+      water:[ rect(6,0,7,15), rect(6,14,18,15) ],
+      bridges:[ rect(6,7,7,8), rect(11,14,12,15) ],
+      spawn:{x:14,y:3,dir:{x:0,y:1}}
+    },
+    {
+      id:'daejeon', name:'Daejeon', kr:'대전', emoji:'🔬',
+      feat:'Two streams', landmark:'🌿',
+      water:[ rect(0,8,23,8), rect(0,16,23,16) ],
+      bridges:[ rect(5,8,6,8), rect(17,8,18,8), rect(11,16,12,16) ],
+      spawn:{x:11,y:11,dir:{x:1,y:0}}
+    },
+    {
+      id:'gwangju', name:'Gwangju', kr:'광주', emoji:'🎨',
+      feat:'Yeongsan River', landmark:'🖼️',
+      water:[ rect(0,13,15,14), rect(14,13,15,23) ],
+      bridges:[ rect(5,13,6,14), rect(11,13,12,14), rect(14,19,15,20) ],
+      spawn:{x:18,y:4,dir:{x:0,y:1}}
+    }
+  ];
+
+  /* ---------- Food (Korean) ---------- */
+  const FOODS = ['🍙','🥟','🍜','🍢','🍳','🌶️','🥬','🍚','🍘','🦐'];
+  const BONUS = '🍉';
+
+  /* ---------- State ---------- */
+  let map = MAPS[0];
+  let snake, dir, nextDir, food, bonus, bonusTimer;
+  let score = 0, best = 0;
+  let tick = 130, baseTick = 130, eaten = 0;
+  let running = false, paused = false, loopId = null;
+  let muted = false;
+  let waterSet, bridgeSet; // Sets of "x,y" keys for O(1) lookup
+
+  /* ---------- Persistence (high scores) ---------- */
+  function bestKey(id){return 'koreaSnakeBest_'+id;}
+  function getBest(id){ try{return parseInt(localStorage.getItem(bestKey(id))||'0',10)||0;}catch(e){return 0;} }
+  function setBest(id,v){ try{localStorage.setItem(bestKey(id),String(v));}catch(e){} }
+
+  /* ---------- Sound (WebAudio, no files) ---------- */
+  let actx=null;
+  function beep(freq,dur,type,vol){
+    if(muted) return;
+    try{
+      actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+      const o=actx.createOscillator(), g=actx.createGain();
+      o.type=type||'square'; o.frequency.value=freq;
+      g.gain.value=vol||0.05; o.connect(g); g.connect(actx.destination);
+      o.start(); g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+(dur||0.09));
+      o.stop(actx.currentTime+(dur||0.09));
+    }catch(e){}
+  }
+  const sEat   = ()=>beep(660,0.08,'square',0.06);
+  const sBonus = ()=>{beep(880,0.09,'triangle',0.07); setTimeout(()=>beep(1180,0.1,'triangle',0.07),90);};
+  const sDie   = ()=>{beep(200,0.18,'sawtooth',0.08); setTimeout(()=>beep(120,0.25,'sawtooth',0.08),120);};
+
+  /* ---------- Helpers ---------- */
+  const key=(x,y)=>x+','+y;
+  function inRect(x,y,r){return x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1;}
+  function buildSets(m){
+    waterSet=new Set(); bridgeSet=new Set();
+    for(let y=0;y<GRID;y++)for(let x=0;x<GRID;x++){
+      let w=m.water.some(r=>inRect(x,y,r));
+      let b=m.bridges.some(r=>inRect(x,y,r));
+      if(b) bridgeSet.add(key(x,y));
+      else if(w) waterSet.add(key(x,y));
+    }
+  }
+  function isDeadly(x,y){
+    if(x<0||y<0||x>=GRID||y>=GRID) return true;     // wall
+    if(waterSet.has(key(x,y))) return true;          // water (bridges removed already)
+    return false;
+  }
+  function isBlockedForFood(x,y){
+    return waterSet.has(key(x,y)) || snake.some(s=>s.x===x&&s.y===y);
+  }
+  function randFood(){
+    let x,y,guard=0;
+    do{ x=(Math.random()*GRID)|0; y=(Math.random()*GRID)|0; guard++; }
+    while(isBlockedForFood(x,y) && guard<500);
+    return {x,y,emoji:FOODS[(Math.random()*FOODS.length)|0]};
+  }
+  function maybeSpawnBonus(){
+    if(bonus) return;
+    if(Math.random()<0.18){
+      let f=randFood();
+      bonus={x:f.x,y:f.y,emoji:BONUS}; bonusTimer=8000; // ms visible
+    }
+  }
+
+  /* ---------- Game setup ---------- */
+  function resetGame(){
+    buildSets(map);
+    const sp=map.spawn;
+    snake=[ {x:sp.x,y:sp.y},{x:sp.x-sp.dir.x,y:sp.y-sp.dir.y},{x:sp.x-2*sp.dir.x,y:sp.y-2*sp.dir.y} ];
+    dir={...sp.dir}; nextDir={...sp.dir};
+    score=0; eaten=0; tick=baseTick; bonus=null; bonusTimer=0;
+    food=randFood();
+    best=getBest(map.id);
+    document.getElementById('score').textContent='0';
+    document.getElementById('best').textContent=best;
+    draw();
+  }
+
+  function startRun(){
+    hideOverlay(startOverlay); hideOverlay(overOverlay); hideOverlay(pauseOverlay);
+    running=true; paused=false;
+    schedule();
+  }
+  function schedule(){
+    if(loopId) clearTimeout(loopId);
+    loopId=setTimeout(step, tick);
+  }
+
+  /* ---------- Main step ---------- */
+  let lastTime=performance.now();
+  function step(){
+    if(!running||paused) return;
+    const now=performance.now(); const dt=now-lastTime; lastTime=now;
+
+    // bonus countdown
+    if(bonus){ bonusTimer-=tick; if(bonusTimer<=0) bonus=null; }
+
+    // commit direction (block 180° reversal)
+    if(!(nextDir.x===-dir.x && nextDir.y===-dir.y) || snake.length===1) dir={...nextDir};
+
+    const head={x:snake[0].x+dir.x, y:snake[0].y+dir.y};
+
+    // collisions: wall / water / self
+    if(isDeadly(head.x,head.y)){ return gameOver(waterSet.has(key(head.x,head.y))?'water':'wall'); }
+    if(snake.some(s=>s.x===head.x&&s.y===head.y)){ return gameOver('self'); }
+
+    snake.unshift(head);
+
+    // eat?
+    let ate=false;
+    if(food && head.x===food.x && head.y===food.y){
+      score+=10; eaten++; ate=true; sEat();
+      food=randFood();
+      if(eaten%4===0 && tick>70){ tick-=6; }   // gradually faster
+      maybeSpawnBonus();
+    }
+    if(bonus && head.x===bonus.x && head.y===bonus.y){
+      score+=50; ate=true; bonus=null; sBonus();
+      // bonus = points only, no extra growth beyond the one segment already added
+      snake.pop();
+    }
+    if(!ate) snake.pop(); // normal move: drop tail
+
+    document.getElementById('score').textContent=score;
+    if(score>best){ best=score; setBest(map.id,best); document.getElementById('best').textContent=best; }
+
+    draw();
+    schedule();
+  }
+
+  /* ---------- Rendering ---------- */
+  function draw(){
+    CELL = cv.width/GRID;
+    // background grid
+    for(let y=0;y<GRID;y++)for(let x=0;x<GRID;x++){
+      ctx.fillStyle = ((x+y)&1) ? '#11163a' : '#0e1230';
+      ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
+    }
+    // water
+    waterSet.forEach(k=>{
+      const [x,y]=k.split(',').map(Number);
+      const g=ctx.createLinearGradient(x*CELL,y*CELL,x*CELL,y*CELL+CELL);
+      g.addColorStop(0,'#3a7bff'); g.addColorStop(1,'#1d4fd0');
+      ctx.fillStyle=g; ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
+      ctx.fillStyle='rgba(255,255,255,.10)';
+      ctx.fillRect(x*CELL,y*CELL+CELL*0.35,CELL,1.5);
+    });
+    // bridges
+    bridgeSet.forEach(k=>{
+      const [x,y]=k.split(',').map(Number);
+      ctx.fillStyle='#8a6a4a'; ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
+      ctx.fillStyle='#6f5238';
+      for(let i=0;i<CELL;i+=6) ctx.fillRect(x*CELL,y*CELL+i,CELL,2);
+      ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.strokeRect(x*CELL+0.5,y*CELL+0.5,CELL-1,CELL-1);
+    });
+
+    // food
+    if(food) drawEmoji(food.emoji,food.x,food.y,1);
+    if(bonus){
+      const pulse = 0.85 + 0.15*Math.sin(performance.now()/120);
+      drawEmoji(bonus.emoji,bonus.x,bonus.y,pulse);
+    }
+
+    // snake
+    drawSnake();
+  }
+
+  function drawEmoji(e,x,y,scale){
+    ctx.save();
+    ctx.font = Math.floor(CELL*0.82*scale)+'px serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(e, x*CELL+CELL/2, y*CELL+CELL/2+1);
+    ctx.restore();
+  }
+
+  function drawSnake(){
+    for(let i=snake.length-1;i>=0;i--){
+      const s=snake[i];
+      const px=s.x*CELL, py=s.y*CELL;
+      const head=(i===0);
+      // body gradient green
+      const t=i/Math.max(snake.length-1,1);
+      const c1 = head? '#39d353' : lerpColor('#2fae46','#1c7a30',t);
+      roundRect(px+1,py+1,CELL-2,CELL-2,head?7:5,c1);
+      // belly stripe
+      ctx.fillStyle='rgba(255,255,255,.12)';
+      roundRect(px+CELL*0.28,py+CELL*0.28,CELL*0.44,CELL*0.44,4,'rgba(220,255,220,.18)');
+      if(head) drawFace(px,py);
+    }
+  }
+  function drawFace(px,py){
+    // eyes oriented to direction
+    const ex = dir.x, ey = dir.y;
+    const cx=px+CELL/2, cy=py+CELL/2;
+    const off=CELL*0.18, eyeR=CELL*0.11, pupR=CELL*0.055;
+    // perpendicular offset for two eyes
+    const perpx=ey, perpy=ex;
+    const e1={x:cx+ex*off+perpx*off, y:cy+ey*off+perpy*off};
+    const e2={x:cx+ex*off-perpx*off, y:cy+ey*off-perpy*off};
+    [e1,e2].forEach(p=>{
+      ctx.fillStyle='#fff'; circle(p.x,p.y,eyeR);
+      ctx.fillStyle='#0c1024'; circle(p.x+ex*eyeR*0.4,p.y+ey*eyeR*0.4,pupR);
+    });
+    // tongue
+    ctx.strokeStyle='#ff4d6d'; ctx.lineWidth=Math.max(1.5,CELL*0.06);
+    ctx.beginPath();
+    const tx=cx+ex*CELL*0.42, ty=cy+ey*CELL*0.42;
+    ctx.moveTo(cx+ex*CELL*0.28,cy+ey*CELL*0.28); ctx.lineTo(tx,ty); ctx.stroke();
+  }
+  function circle(x,y,r){ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();}
+  function roundRect(x,y,w,h,r,fill){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath(); ctx.fillStyle=fill; ctx.fill();
+  }
+  function lerpColor(a,b,t){
+    const ca=hex(a), cb=hex(b);
+    const r=Math.round(ca[0]+(cb[0]-ca[0])*t);
+    const g=Math.round(ca[1]+(cb[1]-ca[1])*t);
+    const bl=Math.round(ca[2]+(cb[2]-ca[2])*t);
+    return `rgb(${r},${g},${bl})`;
+  }
+  function hex(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];}
+
+  /* ---------- Game over ---------- */
+  function gameOver(cause){
+    running=false; if(loopId) clearTimeout(loopId);
+    sDie();
+    const msgs={water:'You fell in the river! 🌊 Use the bridges.',wall:'You hit the wall! 🧱',self:'You ran into yourself! 🌀'};
+    document.getElementById('finalScore').textContent=score;
+    document.getElementById('overMsg').textContent=msgs[cause]||'';
+    document.getElementById('overTitle').textContent = score>0 && score>=best ? 'New Best! 🏆' : 'Game Over';
+    showOverlay(overOverlay);
+  }
+
+  /* ---------- Overlays ---------- */
+  const startOverlay=document.getElementById('startOverlay');
+  const pauseOverlay=document.getElementById('pauseOverlay');
+  const overOverlay=document.getElementById('overOverlay');
+  function showOverlay(o){o.classList.add('show');}
+  function hideOverlay(o){o.classList.remove('show');}
+
+  /* ---------- Pause ---------- */
+  function togglePause(){
+    if(!running) return;
+    paused=!paused;
+    if(paused){ showOverlay(pauseOverlay); }
+    else { hideOverlay(pauseOverlay); lastTime=performance.now(); schedule(); }
+  }
+
+  /* ---------- Screen switching ---------- */
+  function show(screen){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(screen).classList.add('active');
+  }
+  function openGame(m){
+    map=m; resetGame();
+    document.getElementById('ovEmoji').textContent=m.emoji;
+    document.getElementById('ovCity').textContent=m.name+' '+m.kr;
+    document.getElementById('ovFeat').textContent=m.feat;
+    show('game');
+    hideOverlay(overOverlay); hideOverlay(pauseOverlay); showOverlay(startOverlay);
+  }
+
+  /* ---------- Build map cards ---------- */
+  function buildCards(){
+    const wrap=document.getElementById('cards'); wrap.innerHTML='';
+    MAPS.forEach(m=>{
+      const b=getBest(m.id);
+      const el=document.createElement('div');
+      el.className='card';
+      el.innerHTML=`<div class="emoji">${m.emoji}</div>
+        <div class="cname">${m.name}</div>
+        <div class="ckr">${m.kr}</div>
+        <div class="feat">${m.landmark} ${m.feat}</div>
+        <div class="best">${b>0?'Best '+b:'&nbsp;'}</div>`;
+      el.addEventListener('click',()=>openGame(m));
+      wrap.appendChild(el);
+    });
+  }
+
+  /* ---------- Input ---------- */
+  function setDir(x,y){
+    // ignore direct reversal
+    if(x===-dir.x && y===-dir.y) return;
+    nextDir={x,y};
+  }
+  window.addEventListener('keydown',e=>{
+    const k=e.key.toLowerCase();
+    if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
+    if(k==='arrowup'||k==='w') setDir(0,-1);
+    else if(k==='arrowdown'||k==='s') setDir(0,1);
+    else if(k==='arrowleft'||k==='a') setDir(-1,0);
+    else if(k==='arrowright'||k==='d') setDir(1,0);
+    else if(k===' '){ if(running) togglePause(); }
+  },{passive:false});
+
+  // swipe
+  let tStart=null;
+  cv.addEventListener('touchstart',e=>{const t=e.touches[0];tStart={x:t.clientX,y:t.clientY};},{passive:true});
+  cv.addEventListener('touchmove',e=>{e.preventDefault();},{passive:false});
+  cv.addEventListener('touchend',e=>{
+    if(!tStart) return;
+    const t=e.changedTouches[0];
+    const dx=t.clientX-tStart.x, dy=t.clientY-tStart.y;
+    if(Math.abs(dx)<18&&Math.abs(dy)<18){ if(running) togglePause(); tStart=null; return;}
+    if(Math.abs(dx)>Math.abs(dy)) setDir(dx>0?1:-1,0); else setDir(0,dy>0?1:-1);
+    tStart=null;
+  },{passive:true});
+
+  /* ---------- Buttons ---------- */
+  document.getElementById('goBtn').onclick=()=>{ lastTime=performance.now(); startRun(); };
+  document.getElementById('changeBtn').onclick=()=>{ running=false; show('menu'); buildCards(); };
+  document.getElementById('againBtn').onclick=()=>{ resetGame(); lastTime=performance.now(); startRun(); };
+  document.getElementById('menuBtn').onclick=()=>{ running=false; show('menu'); buildCards(); };
+  document.getElementById('backBtn').onclick=()=>{ running=false; show('menu'); buildCards(); };
+  document.getElementById('pauseBtn').onclick=togglePause;
+  document.getElementById('resumeBtn').onclick=togglePause;
+  document.getElementById('muteBtn').onclick=function(){ muted=!muted; this.textContent=muted?'🔇':'🔊'; };
+
+  /* ---------- Animation heartbeat for bonus pulse ---------- */
+  function raf(){ if(running && !paused && bonus) draw(); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
+
+  /* ---------- Init ---------- */
+  buildCards();
+})();
+</script>
+</body>
+</html>
