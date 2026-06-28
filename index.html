@@ -174,45 +174,69 @@
   const MAPS = [
     {
       id:'seoul', name:'Seoul', kr:'서울', emoji:'🏙️',
-      feat:'Han River · 3 bridges', landmark:'🌉',
-      water:[ rect(0,11,23,12) ],
-      bridges:[ rect(3,11,4,12), rect(11,11,12,12), rect(19,11,20,12) ],
-      spawn:{x:4,y:4,dir:{x:1,y:0}}
+      feat:'Han River bend · Yeouido', landmark:'🌉',
+      theme:{bg1:'#141a3e',bg2:'#0e1230',wTop:'#3a7bff',wBot:'#1d4fd0'},
+      // Han River: staircase curve dipping at the centre where Yeouido sits
+      water:[ rect(0,9,5,10), rect(5,10,9,11), rect(9,11,15,12), rect(15,10,19,11), rect(19,9,23,10) ],
+      bridges:[ rect(3,9,3,10), rect(10,11,10,12), rect(20,9,20,10) ],
+      islands:[ rect(11,11,12,11) ],   // Yeouido
+      landmarks:[ {x:8,y:3,e:'🏯'}, {x:12,y:5,e:'🗼'}, {x:4,y:16,e:'🏙️'}, {x:19,y:17,e:'🏟️'} ],
+      spawn:{x:4,y:3,dir:{x:1,y:0}}
     },
     {
       id:'busan', name:'Busan', kr:'부산', emoji:'🌊',
-      feat:'Gwangan Bridge · coast', landmark:'🌁',
-      water:[ rect(11,0,12,23) ],
-      bridges:[ rect(11,5,12,6), rect(11,17,12,18) ],
-      spawn:{x:3,y:3,dir:{x:0,y:1}}
+      feat:'Gwangan Bay · coast', landmark:'🌁',
+      theme:{bg1:'#10243a',bg2:'#0b1a2c',wTop:'#1ec8cf',wBot:'#0e7d86'},
+      // Suyeong Bay inlet from the south coast (bottom sea band)
+      water:[ rect(0,22,23,23), rect(11,8,12,21) ],
+      bridges:[ rect(11,12,12,12), rect(11,18,12,18) ],   // Gwangan crossings
+      islands:[],
+      landmarks:[ {x:4,y:3,e:'⛰️'}, {x:20,y:20,e:'🏖️'}, {x:3,y:20,e:'🚢'}, {x:9,y:13,e:'🌉'} ],
+      spawn:{x:5,y:4,dir:{x:1,y:0}}
     },
     {
       id:'incheon', name:'Incheon', kr:'인천', emoji:'⚓',
       feat:'Incheon Bridge · sea', landmark:'🛳️',
-      water:[ rect(0,20,23,21) ],
-      bridges:[ rect(8,20,9,21), rect(15,20,16,21) ],
-      spawn:{x:4,y:3,dir:{x:1,y:0}}
+      theme:{bg1:'#121a32',bg2:'#0d1426',wTop:'#4a8bd0',wBot:'#27557f'},
+      // wide sea channel to the west, long bridge to airport island
+      water:[ rect(6,0,9,23) ],
+      bridges:[ rect(6,11,9,11), rect(6,12,9,12) ],
+      islands:[],
+      landmarks:[ {x:2,y:4,e:'✈️'}, {x:16,y:3,e:'🛳️'}, {x:3,y:18,e:'⚓'}, {x:18,y:18,e:'🏙️'} ],
+      spawn:{x:18,y:4,dir:{x:0,y:1}}
     },
     {
       id:'daegu', name:'Daegu', kr:'대구', emoji:'🍎',
-      feat:'Nakdong River bend', landmark:'🏞️',
-      water:[ rect(6,0,7,15), rect(6,14,18,15) ],
-      bridges:[ rect(6,7,7,8), rect(11,14,12,15) ],
-      spawn:{x:14,y:3,dir:{x:0,y:1}}
+      feat:'Geumho × Nakdong', landmark:'🏞️',
+      theme:{bg1:'#1b1733',bg2:'#141026',wTop:'#3a7bff',wBot:'#1d4fd0'},
+      // Nakdong runs down the west, Geumho cuts across and joins it
+      water:[ rect(1,0,2,23), rect(1,11,4,12), rect(4,11,23,12) ],
+      bridges:[ rect(1,6,2,6), rect(1,18,2,18), rect(10,11,10,12), rect(18,11,18,12) ],
+      islands:[],
+      landmarks:[ {x:6,y:4,e:'⛰️'}, {x:21,y:3,e:'⛰️'}, {x:20,y:20,e:'🍎'}, {x:15,y:18,e:'🏟️'} ],
+      spawn:{x:15,y:4,dir:{x:0,y:1}}
     },
     {
       id:'daejeon', name:'Daejeon', kr:'대전', emoji:'🔬',
-      feat:'Two streams', landmark:'🌿',
-      water:[ rect(0,8,23,8), rect(0,16,23,16) ],
-      bridges:[ rect(5,8,6,8), rect(17,8,18,8), rect(11,16,12,16) ],
-      spawn:{x:11,y:11,dir:{x:1,y:0}}
+      feat:'Twin streams', landmark:'🌿',
+      theme:{bg1:'#10231b',bg2:'#0c1a15',wTop:'#2bb673',wBot:'#147a4b'},
+      // Gapcheon + Yudeungcheon converge into one trunk
+      water:[ rect(8,0,9,11), rect(15,0,16,11), rect(8,11,16,12), rect(11,12,12,23) ],
+      bridges:[ rect(8,6,9,6), rect(15,6,16,6), rect(12,11,12,12), rect(11,18,12,18) ],
+      islands:[],
+      landmarks:[ {x:4,y:4,e:'🔬'}, {x:19,y:5,e:'🏛️'}, {x:5,y:18,e:'🌳'}, {x:19,y:18,e:'🚄'} ],
+      spawn:{x:4,y:3,dir:{x:1,y:0}}
     },
     {
       id:'gwangju', name:'Gwangju', kr:'광주', emoji:'🎨',
       feat:'Yeongsan River', landmark:'🖼️',
-      water:[ rect(0,13,15,14), rect(14,13,15,23) ],
-      bridges:[ rect(5,13,6,14), rect(11,13,12,14), rect(14,19,15,20) ],
-      spawn:{x:18,y:4,dir:{x:0,y:1}}
+      theme:{bg1:'#1c1633',bg2:'#150f26',wTop:'#3a7bff',wBot:'#1d4fd0'},
+      // Yeongsan: L-shape sweeping across then down to the south-west
+      water:[ rect(8,14,23,15), rect(8,15,9,23) ],
+      bridges:[ rect(13,14,13,15), rect(19,14,19,15), rect(8,19,9,19) ],
+      islands:[],
+      landmarks:[ {x:21,y:4,e:'⛰️'}, {x:4,y:4,e:'🎨'}, {x:16,y:9,e:'🏟️'}, {x:4,y:20,e:'🍲'} ],
+      spawn:{x:4,y:4,dir:{x:1,y:0}}
     }
   ];
 
@@ -227,7 +251,7 @@
   let tick = 130, baseTick = 130, eaten = 0;
   let running = false, paused = false, loopId = null;
   let muted = false;
-  let waterSet, bridgeSet; // Sets of "x,y" keys for O(1) lookup
+  let waterSet, bridgeSet, islandSet; // Sets of "x,y" keys for O(1) lookup
 
   /* ---------- Persistence (high scores) ---------- */
   function bestKey(id){return 'koreaSnakeBest_'+id;}
@@ -255,12 +279,14 @@
   const key=(x,y)=>x+','+y;
   function inRect(x,y,r){return x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1;}
   function buildSets(m){
-    waterSet=new Set(); bridgeSet=new Set();
+    waterSet=new Set(); bridgeSet=new Set(); islandSet=new Set();
+    const isW=(x,y)=>(m.water||[]).some(r=>inRect(x,y,r));
+    const isB=(x,y)=>(m.bridges||[]).some(r=>inRect(x,y,r));
+    const isI=(x,y)=>(m.islands||[]).some(r=>inRect(x,y,r));
     for(let y=0;y<GRID;y++)for(let x=0;x<GRID;x++){
-      let w=m.water.some(r=>inRect(x,y,r));
-      let b=m.bridges.some(r=>inRect(x,y,r));
-      if(b) bridgeSet.add(key(x,y));
-      else if(w) waterSet.add(key(x,y));
+      if(isI(x,y)) islandSet.add(key(x,y));           // safe land
+      else if(isB(x,y)) bridgeSet.add(key(x,y));        // safe crossing
+      else if(isW(x,y)) waterSet.add(key(x,y));         // deadly
     }
   }
   function isDeadly(x,y){
@@ -354,19 +380,34 @@
   /* ---------- Rendering ---------- */
   function draw(){
     CELL = cv.width/GRID;
-    // background grid
+    const th = (map && map.theme) || {bg1:'#11163a',bg2:'#0e1230',wTop:'#3a7bff',wBot:'#1d4fd0'};
+    // background grid (per-city tint)
     for(let y=0;y<GRID;y++)for(let x=0;x<GRID;x++){
-      ctx.fillStyle = ((x+y)&1) ? '#11163a' : '#0e1230';
+      ctx.fillStyle = ((x+y)&1) ? th.bg1 : th.bg2;
       ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
     }
-    // water
+    // landmarks (faint city scenery, sits on land behind play pieces)
+    if(map.landmarks && map.landmarks.length){
+      ctx.save(); ctx.globalAlpha=0.5;
+      ctx.font=Math.floor(CELL*0.78)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      map.landmarks.forEach(l=>ctx.fillText(l.e, l.x*CELL+CELL/2, l.y*CELL+CELL/2+1));
+      ctx.restore();
+    }
+    // water (per-city colour)
     waterSet.forEach(k=>{
       const [x,y]=k.split(',').map(Number);
       const g=ctx.createLinearGradient(x*CELL,y*CELL,x*CELL,y*CELL+CELL);
-      g.addColorStop(0,'#3a7bff'); g.addColorStop(1,'#1d4fd0');
+      g.addColorStop(0,th.wTop); g.addColorStop(1,th.wBot);
       ctx.fillStyle=g; ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
       ctx.fillStyle='rgba(255,255,255,.10)';
       ctx.fillRect(x*CELL,y*CELL+CELL*0.35,CELL,1.5);
+    });
+    // islands (safe green land within water, e.g. Yeouido)
+    islandSet.forEach(k=>{
+      const [x,y]=k.split(',').map(Number);
+      ctx.fillStyle='#2f9e44'; ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
+      ctx.fillStyle='#256d33'; ctx.fillRect(x*CELL,y*CELL+CELL*0.6,CELL,CELL*0.4);
+      ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.strokeRect(x*CELL+0.5,y*CELL+0.5,CELL-1,CELL-1);
     });
     // bridges
     bridgeSet.forEach(k=>{
